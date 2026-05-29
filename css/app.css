@@ -87,3 +87,12 @@
     color: #b80f3f;
     opacity: 0.8;
 }
+
+.item-content .item-inner .item-title {
+    cursor: pointer;
+}
+
+.item-content .item-inner .item-title.tache-faite {
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
