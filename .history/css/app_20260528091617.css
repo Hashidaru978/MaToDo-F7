@@ -2,7 +2,7 @@
    Ma ToDo — styles de l'application
    ============================================================ */
 
-/* Couleur principale du thème (vert) */
+/* Couleur principale du thème (vert) */ 
 :root {
     --f7-theme-color: #6dd275;
     --f7-theme-color-rgb: 109, 210, 117;
@@ -10,8 +10,13 @@
     --f7-theme-color-tint: #f06a1e;
 }
 
+.navbar-bg {
+    background-color: #6dd275;
+}
+
+
 .page-content {
     padding-bottom: 16px;
 }
 
-/* SÉANCE 3: ajouter ici le style de la tâche cochée (texte barré) */
+/* SÉANCE 3 : ajouter ici le style de la tâche cochée (texte barré) */
