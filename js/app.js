@@ -30,9 +30,12 @@ var mainView = app.views.create('.view-main', { url: '/' });
 
 let filtreActif = 'toutes';
 
+
 const LS_CLE = 'todo-list';
 
 let taches = chargerTaches(); 
+
+let tacheEnEdition = null;
 
 //LS
 
@@ -76,39 +79,72 @@ function ligneTache(t) {
 }
 
 function afficherTaches() {
+
     $$('.liste-taches').empty();
 
-    let tachesVisible = tachesVisibles();
+    let visibles = tachesVisibles();
 
-    tachesVisible.map(tache => {
-        const li = ligneTache(tache);
-        $$('.liste-taches').append(li);
+    visibles.map(function (tache) {
+        $$('.liste-taches').append(ligneTache(tache));
     });
-    const restantes = taches.filter(function (t) { return !t.fait; }).length; 
-    $$('.compteur').text(restantes + ' tâche(s) restante(s)');  
+
+    let restantes;
+
+    if (filtreActif === 'faites') {
+        restantes = 0;
+    } else {
+        restantes = taches.filter(function (t) {
+            return !t.fait;
+        }).length;
+    }
+
+    $$('.compteur').text(restantes + ' tâche(s) restante(s)');
 }
 
 function ajouterTache() {
+
     const champTache = $$('#saisie-tache');
-    const saisieTache = champTache.val()
+    const saisieTache = champTache.val();
 
-    if (saisieTache.trim() === '') return;
+    const texte = saisieTache.trim();
 
-    const newId = taches.reduce(function (m, t) { return Math.max(m, t.id); }, 0) + 1;
+    if (texte === '') return;
 
-    const newTache = {
-        id: newId,
-        texte: saisieTache.trim(),
-        fait: false,
+    if (tacheEnEdition) {
+
+        tacheEnEdition.texte = texte;
+
+        tacheEnEdition = null;
+
+        $$('#btn-ajouter').text('Ajouter');
+
+        champTache.val('');
+
+        sauvegarder();
+        afficherTaches();
+
+        return;
     }
 
-    taches.push(newTache);
-    sauvegarder();
-    afficherTaches();
+    const newId = taches.length
+        ? Math.max(...taches.map(t => t.id)) + 1
+        : 1;
+
+    taches.push({
+        id: newId,
+        texte: texte,
+        fait: false
+    });
 
     champTache.val('');
 
-    app.toast.create({ text: 'Tâche ajoutée !', closeTimeout: 2000 }).open();
+    sauvegarder();
+    afficherTaches();
+
+    app.toast.create({
+        text: 'Tâche ajoutée !',
+        closeTimeout: 2000
+    }).open();
 }
 
 function supprimerTache(id) {
@@ -132,6 +168,24 @@ function tachesVisibles() {
   if (filtreActif === 'afaire') return taches.filter(function (t) { return !t.fait; }); 
   if (filtreActif === 'faites') return taches.filter(function (t) { return t.fait; }); 
   return taches;
+}
+
+function modifierTache(id, nouveauTexte) {
+
+    const t = taches.find(function (x) {
+        return x.id === parseInt(id, 10);
+    });
+
+    if (!t) return;
+
+    const texteFinal = nouveauTexte.trim();
+
+    if (texteFinal === '') return;
+
+    t.texte = texteFinal;
+
+    sauvegarder();
+    afficherTaches();
 }
 
 //evenement
@@ -173,7 +227,25 @@ $$(document).on('click', '.filtre-btn', function () {
   afficherTaches(); 
 });
 
+//modifier
 
-//  SÉANCE 3 — ajouter :
-//    - chargerTaches() et sauvegarder() avec localStorage
-// ------------------------------------------------------------
+$$(document).on('click', '.item-title', function () {
+
+    const id = $$(this)
+        .closest('.item-content')
+        .attr('data-id');
+
+    const t = taches.find(function (x) {
+        return x.id === parseInt(id, 10);
+    });
+
+    if (!t) return;
+
+    if (t.fait) return;
+
+    tacheEnEdition = t;
+
+    $$('#saisie-tache').val(t.texte);
+
+    $$('#btn-ajouter').text('Modifier');
+});
