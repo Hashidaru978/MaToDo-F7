@@ -20,12 +20,35 @@ var mainView = app.views.create('.view-main', { url: '/' });
 //    - une fonction ajouterTache(texte)
 //    - une fonction supprimerTache(id)
 // ============================================================
-let taches = [
-    { id: 1, texte: "Module F7 - Introduction", fait: true },
-    { id: 2, texte: "Module F7 - Session 1", fait: true },
-    { id: 3, texte: "Module F7 - Session 2", fait: false },
-    { id: 4, texte: "Module F7 - Session 3", fait: false },
-];
+
+//let taches = [
+//    { id: 1, texte: "Module F7 - Introduction", fait: true },
+//    { id: 2, texte: "Module F7 - Session 1", fait: true },
+//   { id: 3, texte: "Module F7 - Session 2", fait: false },
+//    { id: 4, texte: "Module F7 - Session 3", fait: false },
+//];
+
+let filtreActif = 'toutes';
+
+const LS_CLE = 'todo-list';
+
+let taches = chargerTaches(); 
+
+//LS
+
+function sauvegarder() { 
+    localStorage.setItem(LS_CLE, JSON.stringify(taches)); 
+}
+
+// Charger : texte -> objet
+
+function chargerTaches() { 
+    var data = localStorage.getItem(LS_CLE); 
+    if (data) return JSON.parse(data); 
+    return []; 
+} 
+
+//fonction
 
 function ligneTache(t) {
     return `
@@ -36,12 +59,16 @@ function ligneTache(t) {
                     <i class="icon-checkbox"></i>
                 </label>
             </div>
+
             <div class="item-inner">
-                <div class="item-title">
+                <div class="item-title ${t.fait ? 'tache-faite' : ''}">
                     ${t.texte}
                 </div>
+
                 <div class="item-after">
-                    <a href="#" class="btn-suppr"><i class="icon f7-icons">trash</i></a>
+                    <a href="#" class="btn-suppr">
+                        <i class="icon f7-icons">trash</i>
+                    </a>
                 </div>
             </div>
         </li>
@@ -51,10 +78,14 @@ function ligneTache(t) {
 function afficherTaches() {
     $$('.liste-taches').empty();
 
-    taches.map(tache => {
+    let tachesVisible = tachesVisibles();
+
+    tachesVisible.map(tache => {
         const li = ligneTache(tache);
         $$('.liste-taches').append(li);
     });
+    const restantes = taches.filter(function (t) { return !t.fait; }).length; 
+    $$('.compteur').text(restantes + ' tâche(s) restante(s)');  
 }
 
 function ajouterTache() {
@@ -72,16 +103,38 @@ function ajouterTache() {
     }
 
     taches.push(newTache);
-
+    sauvegarder();
     afficherTaches();
 
     champTache.val('');
+
+    app.toast.create({ text: 'Tâche ajoutée !', closeTimeout: 2000 }).open();
 }
 
 function supprimerTache(id) {
     taches = taches.filter(function (t) { return t.id !== parseInt(id, 10); });
+    sauvegarder();
     afficherTaches();
 }
+
+function basculerTache(id) {
+    var t = taches.find(function (x) {
+        return x.id === parseInt(id, 10);
+    });
+    if (t) {
+        t.fait = !t.fait;
+        sauvegarder();
+        afficherTaches();
+    }
+}
+  
+function tachesVisibles() { 
+  if (filtreActif === 'afaire') return taches.filter(function (t) { return !t.fait; }); 
+  if (filtreActif === 'faites') return taches.filter(function (t) { return t.fait; }); 
+  return taches;
+}
+
+//evenement
 
 $$(document).on('click', '#btn-ajouter', function () {
     ajouterTache();
@@ -107,18 +160,20 @@ $$(document).on('page:init', '.page[data-name="taches"]', function () {
     afficherTaches(); // premier appel de la fonction
 });
 
+$$(document).on('change', '.liste-taches input[type="checkbox"]', function () {
+    var id = $$(this).parents('.item-content').attr('data-id');
+    basculerTache(id);
+});
 
-
+  
+$$(document).on('click', '.filtre-btn', function () { 
+  $$('.filtre-btn').removeClass('button-active'); 
+  $$(this).addClass('button-active'); 
+  filtreActif = $$(this).attr('data-filtre'); 
+  afficherTaches(); 
+});
 
 
 //  SÉANCE 3 — ajouter :
-//    - basculerTache(id) pour cocher / décocher
-//    - le compteur de tâches restantes
-//    - les filtres (Toutes / À faire / Faites)
 //    - chargerTaches() et sauvegarder() avec localStorage
 // ------------------------------------------------------------
-
-// Exemple de structure de données (à activer en séance 2) :
-// var taches = [
-//   { id: 1, texte: "Réviser l'algorithmique", fait: false },
-// ];
