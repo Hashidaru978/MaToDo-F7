@@ -8,7 +8,7 @@ var $$ = Dom7; // utilitaire DOM intégré à Framework7
 var app = new Framework7({
     el: '#app',
     name: 'MaToDo',
-    theme: 'auto',
+    theme: 'auto', 
     routes: routes,
 });
 
